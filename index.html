@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080911">
+<meta name="description" content="双星潮汐。观看一段二十秒的星系近掠，或以自己的视角探索星桥。">
+<title>双星潮汐 · Tidal Passage</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230c0c14'/%3E%3Cg fill='none' stroke='%23deccaa' stroke-width='2.5' transform='rotate(-30 32 32)'%3E%3Cellipse cx='23' cy='34' rx='18' ry='7'/%3E%3Cellipse cx='42' cy='27' rx='15' ry='6'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-mode="cover">
+<main id="experience" aria-label="双星潮汐交互影片">
+  <div id="stage" tabindex="0" aria-label="星系场景。拖动进入自由视角，方向键环绕，加号和减号缩放。">
+    <picture id="poster"><source media="(max-aspect-ratio: 1/1)" srcset="assets/poster-portrait.webp"><img src="assets/poster-landscape.webp" alt="琥珀色与冰蓝色星系拉出一条交会的星桥"></picture>
+    <canvas id="galaxy" aria-hidden="true"></canvas>
+    <video id="movie" playsinline preload="none" aria-label="双星潮汐二十秒短片" hidden></video>
+  </div>
+  <div class="vignette" aria-hidden="true"></div>
+  <header class="mast">
+    <button type="button" id="home" class="brand" aria-label="双星潮汐，返回首页">
+      <svg class="logomark" viewBox="0 0 47 34" aria-hidden="true"><g transform="rotate(-24 23.5 17)" fill="none" stroke="currentColor" stroke-width="1.15"><ellipse cx="16" cy="19" rx="14" ry="5.5"/><ellipse cx="31" cy="13" rx="11.7" ry="4.4"/><circle cx="16" cy="19" r="1.1" fill="currentColor"/><circle cx="31" cy="13" r=".9" fill="currentColor"/></g></svg>
+      <span>双星潮汐</span>
+    </button>
+    <div class="mast-actions">
+      <button type="button" id="sound" class="tool" aria-label="关闭原声" aria-pressed="true"><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span>原声</span></button>
+      <span class="tool-sep" aria-hidden="true"></span>
+      <a id="download" class="tool" href="assets/film.mp4" download="Tidal-Passage.mp4" aria-label="下载 MP4 影片"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4.5 16v4h15v-4"/></svg><span>下载影片</span></a>
+    </div>
+  </header>
+  <section id="cover" aria-labelledby="title">
+    <div class="cover-text">
+      <h1 id="title">Tidal <em>Passage</em></h1>
+      <p>两座星系擦肩而过，星尘在它们之间架起一座桥。</p>
+      <div class="cover-actions">
+        <button type="button" class="primary" id="watch"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.8 16 10 6 16.2z" fill="currentColor" stroke="none"/></svg><span>播放短片</span><small>00:20</small></button>
+        <button type="button" class="secondary" id="explore"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="4.5" transform="rotate(-30 12 12)"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/></svg>自由探索</button>
+      </div>
+    </div>
+    <nav class="chapters" aria-label="镜头章节">
+      <button type="button" data-seek="0"><span>00:00</span><b>近掠</b></button>
+      <button type="button" data-seek="8"><span>00:08</span><b>星桥</b></button>
+      <button type="button" data-seek="14"><span>00:14</span><b>远望</b></button>
+    </nav>
+  </section>
+  <section id="transport" aria-label="影片控制" hidden>
+    <div class="transport-caption"><span id="chapter">近掠</span><span id="time-display">00:00 <i>/</i> 00:20</span></div>
+    <label class="sr-only" for="timeline">影片进度</label><input id="timeline" type="range" min="0" max="20" step="0.01" value="0" aria-valuetext="0 秒">
+    <div class="transport-row"><button type="button" id="playpause" class="small-control"><span class="play-state" aria-hidden="true"></span><span id="playlabel">暂停</span></button><span class="row-end"><button type="button" id="orbit-switch" class="small-control">自由探索</button><button type="button" id="fullscreen" class="icon-btn" aria-label="全屏观看"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4"/></svg></button></span></div>
+  </section>
+  <section id="orbit-tools" aria-label="自由探索控制" hidden>
+    <p id="orbit-instructions"><span class="desktop-help">拖动环绕 · 滚轮缩放</span><span class="touch-help">单指环绕 · 双指缩放</span></p>
+    <div><button type="button" id="direct" class="secondary">回到导演镜头</button><button type="button" id="reset" class="small-control">复位视角</button></div>
+  </section>
+  <div id="status" class="sr-only" role="status"></div>
+</main>
+<audio id="score" src="assets/score.mp3" preload="metadata"></audio>
+
+<script src="js/three.min.js"></script>
+<script src="js/scene.js"></script><script src="js/canvas-fallback.js"></script>
+<script src="js/textures.js"></script>
+<script src="js/app.js"></script>
+</body>
+<!--
+The MIT License
+
+Copyright © 2010-2023 three.js authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Copyright 2022 The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+https://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded, 
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+-->
+</html>
