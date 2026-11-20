@@ -4,6 +4,8 @@
 
 一段二十秒的星系近掠：可以看完成片，也可以自己驾驶视角穿过星桥。
 
+![双星潮汐封面：琥珀色与冰蓝色星系之间拉出一条星桥](assets/preview/cover.jpg)
+
 WebGL 实时渲染，无构建步骤、无运行时依赖、无外部请求。页面、样式与脚本都是可直接阅读的明文源码。
 
 ## 体验内容
@@ -31,6 +33,7 @@ tidal-passage/
 │   ├── score.mp3              # 原声音轨
 │   ├── poster-portrait.webp   # 竖版海报
 │   ├── poster-landscape.webp  # 横版海报
+│   ├── preview/cover.jpg      # README 展示图
 │   ├── textures/              # warm / cold / bridge / sky 四张贴图
 │   └── fonts/                 # Instrument Serif 常规与斜体
 ├── README.md
